@@ -79,6 +79,8 @@ export default Vue.extend({
         updateUser(firstName: string, lastName: string, password: string) {
             this.selectedUser.username = firstName + ' ' + lastName;
             this.selectedUser.password = password;
+            console.log(password);
+            
         },
 
         handleOK(){
@@ -133,4 +135,5 @@ export default Vue.extend({
     padding: 5px;
     width: 20%;
 }
+
 </style>

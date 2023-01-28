@@ -1,106 +1,159 @@
 <template>
-    <!--    Navigation bar-->
-    <div class="product-page">
-        <b-navbar class="header">
-            <b-navbar-nav class="navigation-bar">
-                <b-button v-b-modal.modal-cart class="navigation-button" href="#" variant="primary">
-                    Cart
-                </b-button>
-                <b-button class="navigation-button">
-                    Buy
-                </b-button>
-            </b-navbar-nav>
-        </b-navbar>
+  <!--    Navigation bar-->
+  <div class="product-page">
+    <b-navbar class="header">
+      <b-navbar-nav class="navigation-bar">
+        <b-button
+          v-b-modal.modal-cart
+          class="navigation-button"
+          href="#"
+          variant="primary"
+        >
+          Cart
+        </b-button>
+        <b-button class="navigation-button"> Buy </b-button>
+      </b-navbar-nav>
+    </b-navbar>
 
-        <!--Display cart-->
-        <b-modal id="modal-cart" title="Products in Cart">
+    <!--Display cart-->
+    <b-modal id="modal-cart" title="Products in Cart">
+        <p v-for="line in cart.lines">
+        {{ line.mainProduct.itemName }} :
+        <!-- Button for + and -  -->
+        <button class="btn btn-plus float-right" 
+                @click="changeQty(1,cart.lines.indexOf(line))" 
+                type="button" 
+                name="button">
+          +
+        </button>
 
-            <p v-for="line in cart.lines">
-                {{ line.mainProduct.itemName }} : {{ line.qty }}
-            </p>
-            <p>Total: {{cart.total / 100}} €</p>
+        <span class="quantity-text float-right">{{ line.qty }}</span>
 
-        </b-modal>
-        <!--Display products-->
-    <div v-for="product in products" :key="product.id" class="d-flex align-items-center border-bottom border-2">
-        <div class="p-3"><h5>{{product.name}}</h5></div>
-        <div class="p-3"><h5>{{product.price}} €</h5></div>
-        <div class="ml-auto p-3">
-            <b-button v-on:click="addProductToCart(product.name, product.id, product.price)"
-                      href="#"
-                      variant="primary"
-                      class="btn btn-primary float-right align-top">
-                Add to cart
-            </b-button>
-        </div>
+        <button class="btn btn-minus float-right" 
+                v-if="line.qty > 0"  
+                @click="changeQty(-1,cart.lines.indexOf(line))" 
+                type="button" 
+                name="button">
+          -
+        </button>
+      </p>
+      <p>Total: {{ cart.total / 100 }} €</p>
+    </b-modal>
+    <!--Display products-->
+    <div
+      v-for="product in products"
+      :key="product.id"
+      class="d-flex align-items-center border-bottom border-2"
+    >
+      <div class="p-3">
+        <h5>{{ product.name }}</h5>
+      </div>
+      <div class="p-3">
+        <h5>{{ product.price }} €</h5>
+      </div>
+      <div class="ml-auto p-3">
+        <b-button
+          v-on:click="addProductToCart(product.name, product.id, product.price)"
+          href="#"
+          variant="primary"
+          class="btn btn-primary float-right align-top"
+        >
+          Add to cart
+        </b-button>
+      </div>
     </div>
-
-    </div>
+  </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
+import Vue from "vue";
 interface Line {
-    mainProduct: Product
-    qty: number;
+  mainProduct: Product;
+  qty: number;
 }
 interface Cart {
-    lines: Line[];
-    total: number;
+  lines: Line[];
+  total: number;
 }
 interface Product {
-    itemName: string;
-    sku: number;
-    cost: number;
+  itemName: string;
+  sku: number;
+  cost: number;
 }
 //cryptography library javascropt mdn
-const ProductList: Product[] = []
+const ProductList: Product[] = [];
 
 JSON.stringify({ products: ProductList });
 
-
 export default Vue.extend({
-    name: 'IndexPage',
-    data() {
-        return {
-            products: [] as any,
-            cart: {lines: [], total: 0} as Cart,
-            viewCart: false,
-        }
+  name: "IndexPage",
+  data() {
+    return {
+      products: [] as any,
+      cart: { lines: [], total: 0 } as Cart,
+      viewCart: false,
+    };
+  },
+  mounted() {
+    this.getProducts();
+  },
+  methods: {
+    getProducts() {
+      this.$axios.get("/products").then((response) => {
+        this.products = response.data;
+      });
     },
-    mounted() {
-        this.getProducts()
+    changeQty(qty: number, index: number){
+        this.cart.lines[index].qty += qty;
+        this.cart.total += qty * 100 * this.cart.lines[index].mainProduct.cost;
     },
-    methods: {
-        getProducts() {
-            this.$axios.get('/products').then((response) => {
-                this.products = response.data
-            })
-        },
-        addProductToCart(productName: string, productSku: number, productPrice: number) {
-            let newProduct: Product = {itemName: productName, sku:productSku, cost:productPrice};
-            const index = this.cart.lines.findIndex(line => line.mainProduct.itemName === productName);
-            if (index > -1) {
-                this.cart.lines[index].qty += 1;
-                this.cart.total += this.cart.lines[index].mainProduct.cost * 100;
-                return
-            }
-            let newLine = {mainProduct: newProduct, qty: 1};
-            this.cart.total += productPrice * 100;
-            this.cart.lines.push(newLine);
-        }
-    }
-})
+    addProductToCart(productName: string, productSku: number, productPrice: number) {
+      let newProduct: Product = {
+        itemName: productName,
+        sku: productSku,
+        cost: productPrice,
+      };
+      const index = this.cart.lines.findIndex(
+        (line) => line.mainProduct.itemName === productName
+
+      );
+      if (index > -1) {
+        this.cart.lines[index].qty += 1;
+        this.cart.total += this.cart.lines[index].mainProduct.cost * 100;
+        return;
+      }
+      let newLine = { mainProduct: newProduct, qty: 1 };
+      this.cart.total += productPrice * 100;
+      this.cart.lines.push(newLine);
+    },
+  },
+});
 </script>
 
 <style>
 .header {
-    display: flex;
-    justify-content: end;
-    align-items: center;
+  display: flex;
+  justify-content: end;
+  align-items: center;
 }
 .navigation-button {
-    display: inline-block;
-    margin: 0.5rem 0.5rem 0;
+  display: inline-block;
+  margin: 0.5rem 0.5rem 0;
 }
+.quantity {
+  border: none;
+  text-align: center;
+  width: 10%;
+
+  color: #43484d;
+  font-weight: 300;
+  border: 1px solid #e1e8ee;
+}
+
+.btn-minus, .btn-plus{
+    padding-top: 0;
+    padding-bottom: 0;
+    width: 10%;
+}
+
 </style>
