@@ -16,22 +16,12 @@
         <b-modal id="modal-cart" title="Products in Cart">
 
             <p v-for="line in cart.lines">
-                {{ line.product.itemName }} : {{ line.qty }}
+                {{ line.mainProduct.itemName }} : {{ line.qty }}
             </p>
             <p>Total: {{cart.total / 100}} €</p>
 
         </b-modal>
-
         <!--Display products-->
-<!--        <b-card v-for="product in products" :key="product.id" :title="product.name + product.price" class="text-center">-->
-<!--&lt;!&ndash;            Price: {{ product.price }} €&ndash;&gt;-->
-<!--            <b-button v-on:click="addProductToCart(product.name, product.id, product.price)"-->
-<!--                      href="#"-->
-<!--                      variant="primary"-->
-<!--                      class="btn btn-primary float-right align-top">-->
-<!--                Add to cart-->
-<!--            </b-button>-->
-<!--        </b-card>-->
     <div v-for="product in products" :key="product.id" class="d-flex align-items-center border-bottom border-2">
         <div class="p-3"><h5>{{product.name}}</h5></div>
         <div class="p-3"><h5>{{product.price}} €</h5></div>
@@ -51,7 +41,7 @@
 <script lang="ts">
 import Vue from 'vue';
 interface Line {
-    product: Product
+    mainProduct: Product
     qty: number;
 }
 interface Cart {
@@ -65,12 +55,15 @@ interface Product {
 }
 //cryptography library javascropt mdn
 const ProductList: Product[] = []
+
 JSON.stringify({ products: ProductList });
+
+
 export default Vue.extend({
     name: 'IndexPage',
     data() {
         return {
-            products: null,
+            products: [] as any,
             cart: {lines: [], total: 0} as Cart,
             viewCart: false,
         }
@@ -86,13 +79,13 @@ export default Vue.extend({
         },
         addProductToCart(productName: string, productSku: number, productPrice: number) {
             let newProduct: Product = {itemName: productName, sku:productSku, cost:productPrice};
-            const index = this.cart.lines.findIndex(line => line.product.itemName === productName);
+            const index = this.cart.lines.findIndex(line => line.mainProduct.itemName === productName);
             if (index > -1) {
                 this.cart.lines[index].qty += 1;
-                this.cart.total += this.cart.lines[index].product.cost * 100;
+                this.cart.total += this.cart.lines[index].mainProduct.cost * 100;
                 return
             }
-            let newLine = {product: newProduct, qty: 1};
+            let newLine = {mainProduct: newProduct, qty: 1};
             this.cart.total += productPrice * 100;
             this.cart.lines.push(newLine);
         }
